@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-04-27T21:46:30.990Z",
+  "filesScanned": 1,
+  "issuesFound": 6,
+  "issues": [
+    {
+      "file": "main.tf",
+      "severity": "CRITICAL",
+      "issue": "S3 bucket with public ACL",
+      "occurrences": 1
+    },
+    {
+      "file": "main.tf",
+      "severity": "HIGH",
+      "issue": "Security group open to world",
+      "occurrences": 2
+    },
+    {
+      "file": "main.tf",
+      "severity": "HIGH",
+      "issue": "RDS storage not encrypted",
+      "occurrences": 1
+    },
+    {
+      "file": "main.tf",
+      "severity": "HIGH",
+      "issue": "RDS publicly accessible",
+      "occurrences": 1
+    },
+    {
+      "file": "main.tf",
+      "severity": "CRITICAL",
+      "issue": "Weak or hardcoded password",
+      "occurrences": 1
+    },
+    {
+      "file": "main.tf",
+      "severity": "CRITICAL",
+      "issue": "IAM AdminstratorAccess attached",
+      "occurrences": 1
+    }
+  ],
+  "claudeAnalysis": "# Terraform Security Audit Report\n\n## Overall Security Score: **25/100** 🔴\n\n---\n\n## Issue Analysis & Fixes\n\n### 1. S3 Bucket Public ACL\n**Priority: IMMEDIATE** | **Violates: SOC2, HIPAA, PCI-DSS**\n\n**Risk:** Data exposure, breaches, regulatory fines.\n\n```hcl\nresource \"aws_s3_bucket\" \"data_bucket\" {\n  bucket = \"my-company-data-bucket\"\n}\n\nresource \"aws_s3_bucket_public_access_block\" \"data_bucket\" {\n  bucket                  = aws_s3_bucket.data_bucket.id\n  block_public_acls       = true\n  block_public_policy     = true\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}\n```\n\n---\n\n### 2. Security Group Open SSH (0.0.0.0/0)\n**Priority: IMMEDIATE** | **Violates: PCI-DSS 1.3, SOC2**\n\n**Risk:** Brute-force attacks, unauthorized server access.\n\n```hcl\ningress {\n  from_port   = 22\n  to_port     = 22\n  protocol    = \"tcp\"\n  cidr_blocks = [\"10.0.0.0/8\"]  # Corporate VPN/bastion only\n}\n```\n\n---\n\n### 3. RDS Unencrypted & Public\n**Priority: IMMEDIATE** | **Violates: HIPAA, PCI-DSS 3.4, SOC2**\n\n**Risk:** Data theft, compliance violations, man-in-the-middle attacks.\n\n```hcl\nresource \"aws_db_instance\" \"main_db\" {\n  identifier           = \"production-db\"\n  engine               = \"mysql\"\n  instance_class       = \"db.t3.micro\"\n  allocated_storage    = 20\n  username             = \"admin\"\n  password             = data.aws_secretsmanager_secret_version.db_pass.secret_string\n  storage_encrypted    = true\n  publicly_accessible  = false\n  db_subnet_group_name = aws_db_subnet_group.private.name\n  kms_key_id           = aws_kms_key.rds.arn\n}\n```\n\n---\n\n### 4. Hardcoded Password\n**Priority: IMMEDIATE** | **Violates: All frameworks**\n\n**Risk:** Credential exposure in version control."
+}
